@@ -1,4 +1,5 @@
 ﻿using FileEncrypter.ViewModels;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,14 +30,14 @@ namespace FileEncrypter.Views
             DataContext = _viewModel;
         }
 
-        private void EncryptButton_Click(object sender, RoutedEventArgs e)
+        private async void EncryptButton_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.Encrypt();
+            await _viewModel.Encrypt();
         }
 
-        private void DecryptButton_Click(object sender, RoutedEventArgs e)
+        private async void DecryptButton_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.Decrypt();
+            await _viewModel.Decrypt();
         }
 
         private void OnTextBoxKeyDown(object sender, KeyEventArgs e)
@@ -48,23 +49,6 @@ namespace FileEncrypter.Views
             }
         }
 
-       // private void FileDropArea_DragEnter(object sender, DragEventArgs e)
-       // {
-       //     // change cursor effect
-
-       ////     DragDrop.DoDragDrop(e.Source, e.Data, DragDropEffects.Move);
-       // }
-
-       // private void FileDropArea_DragOver(object sender, DragEventArgs e)
-       // {
-
-       // }
-
-       // private void FileDropArea_DragLeave(object sender, DragEventArgs e)
-       // {
-       //     e.Effects = DragDropEffects.None;
-       // }
-
         private void FileDropArea_Drop(object sender, DragEventArgs e)
         {
             // retrive data
@@ -73,6 +57,17 @@ namespace FileEncrypter.Views
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 
                 _viewModel.Source = files[0];
+            }
+        }
+
+        private void OpenfileButton_Click(object sender, RoutedEventArgs e)
+        {
+            // show dialog
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+
+            if(openFileDialog.ShowDialog() == true)
+            {
+                _viewModel.Source = openFileDialog.FileName;
             }
         }
     }

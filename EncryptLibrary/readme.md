@@ -1,8 +1,14 @@
 ﻿## About library
-This is async library for encrypting and decrypting files.
+This is library for encrypting and decrypting files.
 
-### Structure
-- Encrypter - class for encrypting and decrypting your file.
-- EncryptInfo - struct for providing info about encrypting and decrypting such as File size, duration of encrypting and etc.
-- MathExtensions - class that provides common operations that helps encryptor
+## Structure
+### Interfaces
+- IFileEncrypter - base for all Encrypter implementations, should implement Encrypt, Decrypt and async variation methods.
 
+- IEncryptingAlgorithm - base for different encrypting algorithms, should implement EncryptByte and DecryptByte.
+
+### Classes
+- FileEncrypter - class for encrypting and decrypting your file.
+- FileEncryptionResult - class for providing info about encrypting and decrypting such as file size, duration of encrypting and etc.
+
+- MathExtensions - class helper for IEncryptingAlgorithm implementation.

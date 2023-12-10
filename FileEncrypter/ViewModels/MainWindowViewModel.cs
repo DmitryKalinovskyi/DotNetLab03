@@ -2,13 +2,18 @@
 using System;
 using System.DirectoryServices.ActiveDirectory;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
+using FileEncrypter.Views;
+using System.CodeDom.Compiler;
 
 namespace FileEncrypter.ViewModels
 {
     public class MainWindowViewModel: NotifyViewModel
     {
-        private Encrypter _encrypter;
+        public static string EncryptedExtension = ".crp";
+        
+        private IFileEncrypter _encrypter;
 
         public object CryptoKey
         {
@@ -20,7 +25,7 @@ namespace FileEncrypter.ViewModels
             set
             {
                 _cryptoKey = value;
-                _encrypter.UpdateCryptoKey(value);
+                OnCryptoKeyChanged();
                 OnPropertyChanged(nameof(CryptoKey));
             }
         }
@@ -75,8 +80,9 @@ namespace FileEncrypter.ViewModels
 
         public MainWindowViewModel()
         {
-            _encrypter = new();
+            _encrypter = new EncryptLibrary.FileEncrypter(new HashBasedAlgorithm(0));
             _source = "";
+            _cryptoKey = 0;
          //   _destination = "";
             DecryptButtonActive = false;
             EncryptButtonActive = false;
@@ -95,8 +101,13 @@ namespace FileEncrypter.ViewModels
             // get source file extension
             string ext = Path.GetExtension(_source);
 
-            EncryptButtonActive = ext != _encrypter.WorkingExtension;
+            EncryptButtonActive = ext != EncryptedExtension;
             DecryptButtonActive = !_encryptButtonActive;
+        }
+
+        private void OnCryptoKeyChanged()
+        {
+            _encrypter.Algorithm = new HashBasedAlgorithm(_cryptoKey);
         }
 
         /// <summary>
@@ -107,7 +118,7 @@ namespace FileEncrypter.ViewModels
         {
             // get absolute path without extension and add own extension
 
-            string fileName = _source + _encrypter.WorkingExtension;
+            string fileName = _source + EncryptedExtension;
             string directory = Directory.GetParent(_source).FullName;
             return Path.Combine(directory, fileName);
         }
@@ -124,12 +135,13 @@ namespace FileEncrypter.ViewModels
             return Path.Combine(directory, fileName);
         }
 
-        public void Encrypt()
+        public async Task Encrypt()
         {
             try
             {
                 // destination is a path where will be encrypted file, by default this is in the same directory with source file
                 string destination = ComputeEncryptDestination();
+               
 
                 if(Path.Exists(destination))
                 {
@@ -141,10 +153,32 @@ namespace FileEncrypter.ViewModels
                         return;
                     }
                 }
-                
-                _encrypter.Encrypt(Source, destination);
 
-                MessageBox.Show("File successfully encrypted!", "Operation completed", MessageBoxButton.OK, MessageBoxImage.Information);
+                // create new window with loading 
+                LoadingWindow loadingWindow = new()
+                {
+                    Owner = App.Current.MainWindow
+                };
+                loadingWindow.Show();
+                loadingWindow.StartTimer();
+
+                Progress<double> progress = new(loadingWindow.UpdateProgressBar);
+
+                var encryptResult = await _encrypter.EncryptAsync(Source, destination, progress);
+
+                loadingWindow.Close();
+                // close loading window, display info window
+
+
+                // show file encryption info
+                EncryptionInfoWindow encryptionInfoWindow = new()
+                {
+                    Owner = App.Current.MainWindow,
+                    DataContext = encryptResult
+                };
+                encryptionInfoWindow.Show();
+
+                //MessageBox.Show("File successfully encrypted!", "Operation completed", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch(Exception ex)
             {
@@ -152,13 +186,13 @@ namespace FileEncrypter.ViewModels
             }
         }
 
-        public void Decrypt()
+        public async Task Decrypt()
         {
             try
             {
                 string destination = ComputeDecryptDestination();
 
-                if(Path.Exists(destination)) 
+                if (Path.Exists(destination)) 
                 {
                     var result = MessageBox.Show($"There are already exist item with absolute name {destination}, do you want to continue Decryption? You can possibly lost your data",
                             "Attention", MessageBoxButton.YesNo, MessageBoxImage.Warning);
@@ -169,8 +203,29 @@ namespace FileEncrypter.ViewModels
                     }
                 }
 
-                _encrypter.Decrypt(Source, destination);
-                MessageBox.Show("File successfully decrypted!", "Operation completed", MessageBoxButton.OK, MessageBoxImage.Information);
+                // create new window with loading 
+                LoadingWindow loadingWindow = new()
+                {
+                    Owner = App.Current.MainWindow
+                };
+                loadingWindow.Show();
+                loadingWindow.StartTimer();
+                Progress<double> progress = new(loadingWindow.UpdateProgressBar);
+
+
+                var encryptResult = await _encrypter.DecryptAsync(Source, destination, progress);
+
+                loadingWindow.Close();
+
+                // show file encryption info
+                EncryptionInfoWindow encryptionInfoWindow = new()
+                {
+                    Owner = App.Current.MainWindow,
+                    DataContext = encryptResult
+                };
+                encryptionInfoWindow.Show();
+
+                //MessageBox.Show("File successfully decrypted!", "Operation completed", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
