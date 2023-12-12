@@ -4,9 +4,223 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TaskManager"
+        xmlns:viewModels="clr-namespace:TaskManager.ViewModels"
+        xmlns:converters="clr-namespace:TaskManager.Converters"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Task Manager" Height="450" Width="800">
+    
+    <Window.Resources>
+        <viewModels:MainWindowViewModel x:Key="MainWindowViewModel"></viewModels:MainWindowViewModel>
+        <viewModels:FastAcessViewModel x:Key="FastAcessViewModel"/>
+        <converters:FileSizeConverter x:Key="FileSizeConverter"/>
+        <!--<converters:ProcessPriorityConverter x:Key="ProcessPriorityConverter"></converters:ProcessPriorityConverter>-->
+    </Window.Resources>
+    <Window.DataContext>
+        <Binding Source="{StaticResource MainWindowViewModel}"></Binding>
+    </Window.DataContext>
     <Grid>
+        <TabControl>
+            <TabControl.Resources>
+                <Style TargetType="Button" x:Key="FastButton">
+                    <Setter Property="Width" Value="80"/>
+                    <Setter Property="Height" Value="80"/>
+                    <Setter Property="Margin" Value="10 10"/>
+                    <Setter Property="Background" Value="LightGray"/>
 
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Width="{TemplateBinding Width}"
+                                        Height="{TemplateBinding Height}"
+                                        Background="{TemplateBinding Background}"
+                                        CornerRadius="8">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </TabControl.Resources>
+
+            <TabItem Header="Processes">
+                <!--List of active processes in Windows-->
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="60"></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal"
+                                Height="50"
+                                VerticalAlignment="Center">
+                        <Label
+                            VerticalAlignment="Center">Search</Label>
+                        <TextBox Width="400"
+                                 Height="20"
+                                 Name="processFilterTextBox"
+                                 TextChanged="ProcessFilterTextBox_TextChanged"/>
+                    </StackPanel>
+                    <ListView ItemsSource="{Binding ProcessModels}"
+                              Name="processView"
+                              Grid.Row="1">
+                        <!--<ListView.ItemTemplate>
+                            <DataTemplate>
+                            
+                            </DataTemplate>
+                        </ListView.ItemTemplate>-->
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="ContextMenu">
+                                    <Setter.Value>
+                                        <ContextMenu>
+                                            <MenuItem Header="Change priority"
+                                          >
+                                                <MenuItem Header="Realtime"
+                                                          Command="{Binding ChangePriorityCommand}"
+                                                          CommandParameter="256"
+                                                          />
+                                                <MenuItem Header="High"
+                                                          Command="{Binding ChangePriorityCommand}"
+                                                          CommandParameter="128"/>
+                                                <MenuItem Header="Above Normal"
+                                                          Command="{Binding ChangePriorityCommand}"
+                                                          CommandParameter="32768"/>
+                                                <MenuItem Header="Normal"
+                                                          Command="{Binding ChangePriorityCommand}"
+                                                          CommandParameter="32"/>
+                                                <MenuItem Header="Below Normal"
+                                                          Command="{Binding ChangePriorityCommand}"
+                                                          CommandParameter="16384"/>
+                                                <MenuItem Header="Idle"
+                                                          Command="{Binding ChangePriorityCommand}"
+                                                          CommandParameter="64"/>
+                                            </MenuItem>
+                                            <MenuItem Header="Stop process"
+                                          Command="{Binding Source={StaticResource MainWindowViewModel}, Path=StopProcessCommand}"
+                                          CommandParameter="{Binding}"/>
+                                        </ContextMenu>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Width="200"
+                                                >
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="{Binding Image}"
+                                                       Width="16"
+                                                       Height="16"
+                                                       Margin="5 5"/>
+                                                <TextBlock Text="{Binding ProcessName}"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                    Process Name
+                                </GridViewColumn>
+                                <GridViewColumn Width="80"
+                                                DisplayMemberBinding="{Binding PID}">
+                                    PID
+                                </GridViewColumn>
+                                <GridViewColumn Width="160"
+                                                DisplayMemberBinding="{Binding Status}">
+                                    Status
+                                </GridViewColumn>
+                                <GridViewColumn Width="100"
+                                                DisplayMemberBinding="{Binding RAM, Converter={StaticResource FileSizeConverter}}">
+                                    Memory
+                                </GridViewColumn>
+                                <GridViewColumn Width="100"
+                                                DisplayMemberBinding="{Binding Started}">
+                                    Started
+                                </GridViewColumn>
+                                <GridViewColumn Width="100"
+                                                DisplayMemberBinding="{Binding Threads}">
+                                    Threads
+                                </GridViewColumn>
+                                <GridViewColumn Width="60"
+                                                DisplayMemberBinding="{Binding Priority}">
+                                    Priority
+                                </GridViewColumn>
+                                <GridViewColumn Width="60"
+                                                DisplayMemberBinding="{Binding RefreshCount}">
+                                    RefreshCount
+                                </GridViewColumn>
+                            
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </Grid>
+            </TabItem>
+            <!--<TabItem Header="Productivity">
+                --><!--Here tab where displayer information about proccess and RAM--><!--
+            </TabItem>-->
+
+            <TabItem Header="Fast access" DataContext="{Binding Source={StaticResource FastAcessViewModel}}">
+                    <ItemsControl ItemsSource="{Binding FastAcess}"
+                              >
+                        <!--<ListView.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListView.ItemsPanel>-->
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            VerticalAlignment="Top"></StackPanel>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border>
+                                    <Button Width="100"
+                                            Height="100"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Command="{Binding Source={StaticResource FastAcessViewModel},
+                                        Path=RunApplication}"
+                                            CommandParameter="{Binding}">
+                                        
+                                        <StackPanel>
+                                            <Image Source="{Binding Image}"
+                                                   Width="32"
+                                                   Height="32">
+                                        
+                                            </Image>
+                                            <Label Content="{Binding Title}"
+                                                   />
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!--<Button Style="{StaticResource FastButton}">
+                        Word
+                    </Button>
+
+                    <Button Style="{StaticResource FastButton}">
+                        Calculator
+                    </Button>
+
+                    <Button Style="{StaticResource FastButton}">
+                        Chrome
+                    </Button>
+
+                    <Button Style="{StaticResource FastButton}">
+                        <TextBlock>
+                        Visual Studio
+                        <LineBreak/> Code
+                        </TextBlock>
+                    </Button>
+
+                    <Button Style="{StaticResource FastButton}">
+                        Edge
+                    </Button>-->
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

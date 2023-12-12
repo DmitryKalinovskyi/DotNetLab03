@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace EncryptLibrary
+﻿namespace EncryptLibrary
 {
     public interface IFileEncrypter
     {

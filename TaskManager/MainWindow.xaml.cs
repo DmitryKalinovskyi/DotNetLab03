@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TaskManager.Models;
 
 namespace TaskManager
 {
@@ -23,6 +24,29 @@ namespace TaskManager
         public MainWindow()
         {
             InitializeComponent();
+
+            InitializaProcessFilter();
+        }
+
+        private void InitializaProcessFilter()
+        {
+            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(processView.ItemsSource);
+            view.Filter = ProcessFilter;
+        }
+
+        private bool ProcessFilter(object item)
+        {
+            ProcessModel process = (ProcessModel)item;
+
+            return process.ProcessName.StartsWith(processFilterTextBox.Text);
+        }
+
+        private void ProcessFilterTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // refresh filter
+            CollectionView view = (CollectionView)CollectionViewSource.GetDefaultView(processView.ItemsSource);
+
+            view.Refresh();
         }
     }
 }

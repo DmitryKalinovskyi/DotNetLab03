@@ -1,11 +1,9 @@
 ﻿using EncryptLibrary;
 using System;
-using System.DirectoryServices.ActiveDirectory;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using FileEncrypter.Views;
-using System.CodeDom.Compiler;
 
 namespace FileEncrypter.ViewModels
 {
